@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aya's Schedule</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Schedule">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23fff0f4'/%3E%3Cellipse cx='90' cy='90' rx='22' ry='38' fill='%23f0b8cc' transform='rotate(-30 90 90)'/%3E%3Cellipse cx='90' cy='90' rx='22' ry='38' fill='%23e8a0b8' transform='rotate(42 90 90)'/%3E%3Cellipse cx='90' cy='90' rx='22' ry='38' fill='%23f5c8da' transform='rotate(114 90 90)'/%3E%3Cellipse cx='90' cy='90' rx='22' ry='38' fill='%23e8a0b8' transform='rotate(186 90 90)'/%3E%3Cellipse cx='90' cy='90' rx='22' ry='38' fill='%23f0b8cc' transform='rotate(258 90 90)'/%3E%3Ccircle cx='90' cy='90' r='14' fill='%23fde0ec'/%3E%3Ccircle cx='90' cy='90' r='7' fill='%23d4708a'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #fffbfc;
+    --surface2: #fff0f4;
+    --border: #f2dde5;
+    --accent: #d4708a;
+    --accent2: #b07a9e;
+    --accent3: #8faacc;
+    --accent4: #c47a5a;
+    --text: #2d1f26;
+    --muted: #a08090;
+    --dim: #7a6070;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #ffffff;
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+    background-image:
+      radial-gradient(ellipse 60% 35% at 95% 2%, rgba(255,192,210,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 25% at 2% 95%, rgba(220,170,200,0.08) 0%, transparent 45%);
+  }
+
+  .container { max-width: 860px; margin: 0 auto; }
+
+  header {
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  /* Sakura petals */
+  .sakura-header {
+    position: relative;
+  }
+
+  .petal {
+    position: absolute;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  @keyframes drift {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0.18; }
+    50%  { opacity: 0.25; }
+    100% { transform: translateY(18px) rotate(25deg); opacity: 0.1; }
+  }
+
+  .petal { animation: drift 5s ease-in-out infinite alternate; }
+  .petal:nth-child(2) { animation-delay: 1.2s; animation-duration: 6.5s; }
+  .petal:nth-child(3) { animation-delay: 2.4s; animation-duration: 4.8s; }
+  .petal:nth-child(4) { animation-delay: 0.6s; animation-duration: 7s; }
+
+  .subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 0.4rem;
+  }
+
+  /* Exam countdown */
+  .exam-banner {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .countdown-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.6rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 90px;
+  }
+
+  .countdown-stat.urgent { border-color: rgba(212,112,138,0.4); }
+  .countdown-stat.target { border-color: rgba(143,170,204,0.4); }
+
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .countdown-stat.urgent .stat-num { color: var(--accent4); }
+  .countdown-stat.target .stat-num { color: var(--accent); }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .phase-indicator {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: #8a4a7a;
+    border: 1px solid rgba(176,122,158,0.3);
+    background: rgba(176,122,158,0.08);
+    border-radius: 2px;
+    padding: 0.5rem 0.9rem;
+    letter-spacing: 0.05em;
+    align-self: center;
+  }
+
+  /* Shift selector */
+  .shift-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .shift-tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .shift-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .shift-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+  .shift-tab[data-shift="late"].active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .shift-tab[data-shift="night"].active { background: var(--accent4); border-color: var(--accent4); color: #fff; }
+  .shift-tab[data-shift="off"].active { background: var(--accent3); border-color: var(--accent3); color: #fff; }
+  .shift-tab[data-shift="longday"].active { background: #b07ec9; border-color: #b07ec9; color: #fff; }
+
+  /* Schedule */
+  .schedule { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  .block {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fadeUp 0.3s ease forwards;
+    background: var(--surface);
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .block:nth-child(1) { animation-delay: 0.02s; }
+  .block:nth-child(2) { animation-delay: 0.05s; }
+  .block:nth-child(3) { animation-delay: 0.08s; }
+  .block:nth-child(4) { animation-delay: 0.11s; }
+  .block:nth-child(5) { animation-delay: 0.14s; }
+  .block:nth-child(6) { animation-delay: 0.17s; }
+  .block:nth-child(7) { animation-delay: 0.20s; }
+  .block:nth-child(8) { animation-delay: 0.23s; }
+  .block:nth-child(9) { animation-delay: 0.26s; }
+  .block:nth-child(10) { animation-delay: 0.29s; }
+  .block:nth-child(11) { animation-delay: 0.32s; }
+  .block:nth-child(12) { animation-delay: 0.35s; }
+
+  .block-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    padding: 0.7rem 0.75rem;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.04em;
+    background: var(--surface2);
+    line-height: 1.4;
+  }
+
+  .block-content {
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .block-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .block-label .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.45rem;
+    border-radius: 2px;
+    font-weight: 400;
+  }
+
+  .tag-study { background: rgba(212,112,138,0.1); color: #b8425e; }
+  .tag-japanese { background: rgba(176,122,158,0.12); color: #8a4a7a; }
+  .tag-exercise { background: rgba(143,170,204,0.15); color: #4a6e99; }
+  .tag-hobby { background: rgba(196,122,90,0.1); color: #9a4a28; }
+  .tag-life { background: rgba(160,128,144,0.1); color: #7a5868; }
+  .tag-work { background: rgba(180,140,100,0.12); color: #7a5828; }
+
+  .block-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Study week planner */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--dim);
+    margin: 2.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Topic rotation */
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.8rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .topic-day {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .topic-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .topic-focus {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-top: 0.1rem;
+  }
+
+  /* Principles box */
+  .principles {
+    margin-top: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 1.2rem 1.4rem;
+  }
+
+  .principles-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+  }
+
+  .principles ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .principles li {
+    font-size: 0.78rem;
+    color: var(--dim);
+    line-height: 1.5;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .principles li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+
+  .hidden { display: none !important; }
+
+  .note-box {
+    background: rgba(212,112,138,0.06);
+    border: 1px solid rgba(212,112,138,0.2);
+    border-radius: 3px;
+    padding: 0.7rem 1rem;
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+  .note-box strong { color: #b8425e; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-top sakura-header">
+      <h1>Aya's <em>Daily</em> Schedule</h1>
+      <!-- Sakura petals -->
+      <svg class="petal" style="top:-10px;right:20px;width:28px;" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="20" cy="20" rx="8" ry="18" fill="#e8a0b8" transform="rotate(-30 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f0b8cc" transform="rotate(30 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#e8a0b8" transform="rotate(90 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f0b8cc" transform="rotate(150 20 20)"/><circle cx="20" cy="20" r="4" fill="#f5d0de"/></svg>
+      <svg class="petal" style="top:5px;right:70px;width:18px;" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f0b8cc" transform="rotate(10 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#e8a0b8" transform="rotate(82 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f5c8da" transform="rotate(154 20 20)"/><circle cx="20" cy="20" r="4" fill="#fde8f0"/></svg>
+      <svg class="petal" style="top:-18px;right:110px;width:22px;" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f5c8da" transform="rotate(45 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#e8a0b8" transform="rotate(117 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f0b8cc" transform="rotate(189 20 20)"/><circle cx="20" cy="20" r="4" fill="#f5d0de"/></svg>
+      <svg class="petal" style="top:10px;right:155px;width:14px;" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="20" cy="20" rx="8" ry="18" fill="#e8a0b8" transform="rotate(20 20 20)"/><ellipse cx="20" cy="20" rx="8" ry="18" fill="#f5c8da" transform="rotate(100 20 20)"/><circle cx="20" cy="20" r="4" fill="#fde8f0"/></svg>
+    </div>
+    <p class="subtitle">Cardiac ITU · MRCP Foundations · Mixed Shifts</p>
+    <div class="exam-banner">
+      <div class="countdown-stat urgent">
+        <span class="stat-num" id="days-left">—</span>
+        <span class="stat-label">days to exam</span>
+      </div>
+      <div class="countdown-stat">
+        <span class="stat-num" id="weeks-left">—</span>
+        <span class="stat-label">weeks left</span>
+      </div>
+      <div class="countdown-stat target">
+        <span class="stat-num">30–35</span>
+        <span class="stat-label">Qs per work day</span>
+      </div>
+      <div class="countdown-stat target">
+        <span class="stat-num">40–50</span>
+        <span class="stat-label">Qs per day off</span>
+      </div>
+      <div class="phase-indicator" id="phase-label">Calculating phase…</div>
+    </div>
+  </header>
+
+  <div class="shift-tabs">
+    <button class="shift-tab active" data-shift="day" onclick="showShift('day')">Day Shift</button>
+    <button class="shift-tab" data-shift="longday" onclick="showShift('longday')">Long Day</button>
+    <button class="shift-tab" data-shift="night" onclick="showShift('night')">Night Shift</button>
+    <button class="shift-tab" data-shift="off" onclick="showShift('off')">Day Off</button>
+  </div>
+
+  <!-- DAY SHIFT -->
+  <div id="shift-day" class="schedule">
+    <div class="note-box"><strong>Day shift:</strong> 1 hr study split across morning + post-shift. Tai chi bridges wake-up to study. Email once in the evening — not before shift.</div>
+    <div class="block">
+      <div class="block-time">06:00–06:20</div>
+      <div class="block-content">
+        <div class="block-label">Morning routine + breakfast <span class="tag tag-life">life</span></div>
+        <div class="block-note">Don't rush this. Eating breakfast properly is non-negotiable on a ward shift.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:20–06:35</div>
+      <div class="block-content">
+        <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
+        <div class="block-note">Morning movement before screens. Grounds you before a long shift. Even 10 min of slow form counts.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:35–07:05</div>
+      <div class="block-content">
+        <div class="block-label">Japanese — 30 mins <span class="tag tag-japanese">日本語</span></div>
+        <div class="block-note">Anki deck review first (10 min), then Duolingo / grammar / listening. Morning is best for language retention.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">07:05–07:30</div>
+      <div class="block-content">
+        <div class="block-label">Commute / prep <span class="tag tag-life">life</span></div>
+        <div class="block-note">Passive review: podcast or Anki on the train. No email until evening — protect the morning.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">08:00–18:00</div>
+      <div class="block-content">
+        <div class="block-label">Shift — Cardiac ITU <span class="tag tag-work">work</span></div>
+        <div class="block-note">Clinical exposure counts. Notice the haemodynamics, echo reports, vent settings. It IS revision.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">18:30–19:00</div>
+      <div class="block-content">
+        <div class="block-label">Food + decompress <span class="tag tag-life">life</span></div>
+        <div class="block-note">Mandatory buffer. Eat a proper meal. Don't open a textbook yet.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">19:00–19:15</div>
+      <div class="block-content">
+        <div class="block-label">Email — 15 mins <span class="tag tag-life">life</span></div>
+        <div class="block-note">One daily check. Reply to anything urgent, flag the rest. Close it and don't reopen.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">19:15–20:15</div>
+      <div class="block-content">
+        <div class="block-label">Main study block — 1 hr <span class="tag tag-study">study</span></div>
+        <div class="block-note">One topic only. 20–25 Qs timed (~25 min), then review wrong answers + Anki (~35 min). No multitasking.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">20:15–21:30</div>
+      <div class="block-content">
+        <div class="block-label">Hobby / FFXIV / reading <span class="tag tag-hobby">hobby</span></div>
+        <div class="block-note">Actual leisure. This is not optional — it prevents burnout on a long rotation.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">21:30–22:00</div>
+      <div class="block-content">
+        <div class="block-label">Wind-down + sleep prep <span class="tag tag-life">life</span></div>
+        <div class="block-note">No screens ideally. Lights out by 22:00–22:30 to get 7–8 hrs before next day.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LONG DAY SHIFT -->
+  <div id="shift-longday" class="schedule hidden">
+    <div class="note-box"><strong>Long day 08:00–21:00:</strong> 13-hour shift. Morning is your only window. Tai chi before you leave, email skipped entirely — check it the next morning instead.</div>
+    <div class="block">
+      <div class="block-time">06:00–06:20</div>
+      <div class="block-content">
+        <div class="block-label">Wake + breakfast <span class="tag tag-life">life</span></div>
+        <div class="block-note">Early start. Eat properly — you won't get a proper break until mid-afternoon at best.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:20–06:35</div>
+      <div class="block-content">
+        <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
+        <div class="block-note">Non-negotiable even on a long day. 15 minutes of slow movement before a 13-hr shift is protective, not indulgent.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:35–07:00</div>
+      <div class="block-content">
+        <div class="block-label">Japanese — Anki only <span class="tag tag-japanese">日本語</span></div>
+        <div class="block-note">Cards only, 20 min. Just maintenance before a long shift.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">07:00–07:40</div>
+      <div class="block-content">
+        <div class="block-label">Study — 40 mins <span class="tag tag-study">study</span></div>
+        <div class="block-note">Light touch: Passmedicine MCQs or quick topic review. This is your full study block for the day.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">07:40–08:00</div>
+      <div class="block-content">
+        <div class="block-label">Commute + prep <span class="tag tag-life">life</span></div>
+        <div class="block-note">Passive Anki or a medical podcast on the commute if you want a top-up.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">08:00–21:00</div>
+      <div class="block-content">
+        <div class="block-label">Long day shift — Cardiac ITU <span class="tag tag-work">work</span></div>
+        <div class="block-note">13 hours. Pace yourself. Eat your lunch. Hydrate. If it's quiet, Anki on your phone is fine.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">21:30–22:00</div>
+      <div class="block-content">
+        <div class="block-label">Food + decompress <span class="tag tag-life">life</span></div>
+        <div class="block-note">Eat something real. No study, no email tonight. Your brain has nothing left to encode.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">22:00–22:30</div>
+      <div class="block-content">
+        <div class="block-label">Wind-down — hobby or reading <span class="tag tag-hobby">hobby</span></div>
+        <div class="block-note">A chapter of your book, a short FFXIV session, something light. Then sleep.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">22:30</div>
+      <div class="block-content">
+        <div class="block-label">Sleep — 7 hrs minimum <span class="tag tag-life">life</span></div>
+        <div class="block-note">After a long day, 7 hrs is the floor. Non-negotiable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NIGHT SHIFT -->
+  <div id="shift-night" class="schedule hidden">
+    <div class="note-box"><strong>Night shift:</strong> Split into pre-night and post-night. <strong>Never study after a night</strong> — sleep debt destroys consolidation. Email skipped entirely on post-night day.</div>
+    <div class="block">
+      <div class="block-time">Pre-night<br>10:00–10:30</div>
+      <div class="block-content">
+        <div class="block-label">Wake + breakfast <span class="tag tag-life">life</span></div>
+        <div class="block-note">Don't rush. You have time before the night.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">10:30–10:45</div>
+      <div class="block-content">
+        <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
+        <div class="block-note">Morning movement even on a pre-night day. Keeps the habit consistent regardless of shift type.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">10:45–11:30</div>
+      <div class="block-content">
+        <div class="block-label">Light study — 45 mins <span class="tag tag-study">study</span></div>
+        <div class="block-note">Passmedicine Qs only — low cognitive load. No new heavy topics before a night.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">11:30–12:00</div>
+      <div class="block-content">
+        <div class="block-label">Japanese — Anki only <span class="tag tag-japanese">日本語</span></div>
+        <div class="block-note">Just the cards. 15–20 min max. Don't start new grammar before a night shift.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">12:00–12:15</div>
+      <div class="block-content">
+        <div class="block-label">Email — 15 mins <span class="tag tag-life">life</span></div>
+        <div class="block-note">Daily check done before your pre-night nap. Then close it — you won't be checking it overnight.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">12:15–19:00</div>
+      <div class="block-content">
+        <div class="block-label">Pre-night nap + prep <span class="tag tag-life">life</span></div>
+        <div class="block-note">2–3 hr nap is ideal. Food, uniform, mental prep. This is sleep hygiene, not laziness.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">20:00–08:00</div>
+      <div class="block-content">
+        <div class="block-label">Night shift <span class="tag tag-work">work</span></div>
+        <div class="block-note">If it's quiet after 02:00, Anki cards on your phone are fine. Not active reading.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">Post-night<br>08:30–14:00</div>
+      <div class="block-content">
+        <div class="block-label">Sleep. That's it. <span class="tag tag-life">life</span></div>
+        <div class="block-note">Do not study post-night. No email either. Sleep-deprived encoding is nearly useless. Protect your recovery.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">14:00–16:00</div>
+      <div class="block-content">
+        <div class="block-label">Gentle re-entry: hobby, walk, food <span class="tag tag-hobby">hobby</span></div>
+        <div class="block-note">FFXIV, reading, a short walk outside. Reset your circadian rhythm with natural light.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY OFF -->
+  <div id="shift-off" class="schedule hidden">
+    <div class="note-box"><strong>Day off:</strong> Research + MRCP + Japanese + proper exercise + hobbies. Spread across the day so it doesn't feel like work.</div>
+    <div class="block">
+      <div class="block-time">07:30–08:00</div>
+      <div class="block-content">
+        <div class="block-label">Morning routine, coffee, ease in <span class="tag tag-life">life</span></div>
+        <div class="block-note">No alarm anxiety. Proper breakfast. A slow morning makes the day more productive, not less.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">08:00–08:15</div>
+      <div class="block-content">
+        <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
+        <div class="block-note">Every day, no exceptions. Brief morning form before cognitive work. Sets a calm, focused tone.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">08:15–09:45</div>
+      <div class="block-content">
+        <div class="block-label">Research block — 1.5 hrs <span class="tag tag-study">research</span></div>
+        <div class="block-note">Writing, data analysis, literature review, or abstract prep. Pick one task type per session — don't mix. Start with writing or analysis while your brain is freshest.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">09:45–10:15</div>
+      <div class="block-content">
+        <div class="block-label">Japanese — 30 mins <span class="tag tag-japanese">日本語</span></div>
+        <div class="block-note">Today's language focus: speaking practice, JLPT vocab, watching a short JP video. Go beyond Anki on off days.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">10:15–11:15</div>
+      <div class="block-content">
+        <div class="block-label">Exercise — proper session <span class="tag tag-exercise">move</span></div>
+        <div class="block-note">45–60 min. Gym, run, yoga, swim — whatever. Off-day exercise is your weekly reset button.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">11:15–13:00</div>
+      <div class="block-content">
+        <div class="block-label">Free time / errands / lunch <span class="tag tag-life">life</span></div>
+        <div class="block-note">Social plans, admin, grocery run, cooking something nice. Real life happens here.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">13:00–13:15</div>
+      <div class="block-content">
+        <div class="block-label">Email — 15 mins <span class="tag tag-life">life</span></div>
+        <div class="block-note">Mid-day check on off days. After lunch, before the afternoon study block. Reply, flag, close.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">14:00–15:00</div>
+      <div class="block-content">
+        <div class="block-label">MRCP study block — 1 hr <span class="tag tag-study">study</span></div>
+        <div class="block-note">40–50 Qs timed, then full review of wrong answers. This is your heavy-lifting MCQ session of the week. From week 4, do these in random mixed mode.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">15:00–20:00</div>
+      <div class="block-content">
+        <div class="block-label">Hobby time — FFXIV / reading / rest <span class="tag tag-hobby">hobby</span></div>
+        <div class="block-note">Extended leisure. Raid, read, watch something, game. This is the reward for not wasting the morning.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">20:00–21:00</div>
+      <div class="block-content">
+        <div class="block-label">Optional: Japanese immersion <span class="tag tag-japanese">日本語</span></div>
+        <div class="block-note">JP audio drama, anime without subs, or a JP FFXIV session. Passive but it counts.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly topic rotation -->
+  <p class="section-title">Weekly Topic Rotation</p>
+  <div class="topic-grid">
+    <div class="topic-card">
+      <div class="topic-day">Monday</div>
+      <div class="topic-name">Cardiology Core</div>
+      <div class="topic-focus">ECG, ACS, arrhythmias, heart failure. Aligns with what you see Monday–Tuesday on the unit.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Tuesday</div>
+      <div class="topic-name">Respiratory</div>
+      <div class="topic-focus">Mechanical ventilation, lung function, A-a gradient, V/Q mismatch, ARDS.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Wednesday</div>
+      <div class="topic-name">Renal & Metabolic</div>
+      <div class="topic-focus">AKI, electrolytes, acid-base, RRT. High MRCP weighting — don't skip.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Thursday</div>
+      <div class="topic-name">ITU Pharmacology</div>
+      <div class="topic-focus">Vasopressors, inotropes, sedation, anticoagulation, antifibrinolytics. One drug class per session.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Friday</div>
+      <div class="topic-name">General Medical Drugs</div>
+      <div class="topic-focus">Antihypertensives, diuretics, antiarrhythmics, antidiabetics, steroids, common prescribing pitfalls. Core MRCP pharmacology.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Saturday</div>
+      <div class="topic-name">MCQ Day</div>
+      <div class="topic-focus">Passmedicine / OnExamination. Timed Qs only. Review wrong answers. No new reading.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Sunday A</div>
+      <div class="topic-name">Devices, Imaging & Transplant</div>
+      <div class="topic-focus">ECMO, LVAD/RVAD, 2D echo, POCUS, immunosuppression, rejection, post-transplant infections.</div>
+    </div>
+    <div class="topic-card">
+      <div class="topic-day">Sunday B</div>
+      <div class="topic-name">Antibiotics</div>
+      <div class="topic-focus">Mechanism, spectrum, resistance patterns, common ITU regimens (VAP, line sepsis, post-transplant prophylaxis). Rotate with Sunday A every other week.</div>
+    </div>
+  </div>
+
+  <div class="principles">
+    <div class="principles-title">Ground rules</div>
+    <ul>
+      <li>1 hour on a work day is enough — if done consistently, it beats occasional 3-hour binges.</li>
+      <li>Anki every single day. Even 10 minutes. Cards on the commute count.</li>
+      <li>Tai chi every morning — even just 10 min. The habit matters more than the duration.</li>
+      <li>Email once daily, fixed time. On long days and post-nights, skip it entirely.</li>
+      <li>Research belongs on off days and late-shift mornings — never squeezed into work-day study blocks.</li>
+      <li>Japanese and hobbies are not rewards you earn — they're maintenance. Schedule them non-negotiably.</li>
+      <li>Never study post-night. Sleep is consolidation. Skipping sleep to study is net negative.</li>
+      <li>Clinical exposure is revision. When you manage a vent patient, you're doing respiratory medicine.</li>
+      <li>Rotate the weekly topics loosely — don't reschedule the same topic twice because you missed it. Move on and come back.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+function showShift(shift) {
+  ['day','longday','night','off'].forEach(s => {
+    document.getElementById('shift-' + s).classList.add('hidden');
+    document.querySelector('[data-shift="' + s + '"]').classList.remove('active');
+  });
+  document.getElementById('shift-' + shift).classList.remove('hidden');
+  document.querySelector('[data-shift="' + shift + '"]').classList.add('active');
+
+  // Re-trigger animation
+  const blocks = document.querySelectorAll('#shift-' + shift + ' .block');
+  blocks.forEach((b, i) => {
+    b.style.animation = 'none';
+    b.offsetHeight;
+    b.style.animation = '';
+    b.style.animationDelay = (i * 0.04) + 's';
+  });
+}
+
+// Countdown to MRCP Part 1 — May 21
+(function() {
+  const exam = new Date('2026-05-21T00:00:00');
+  const now = new Date();
+  const msLeft = exam - now;
+  const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+  const weeksLeft = (msLeft / (1000 * 60 * 60 * 24 * 7)).toFixed(1);
+
+  document.getElementById('days-left').textContent = daysLeft > 0 ? daysLeft : '0';
+  document.getElementById('weeks-left').textContent = daysLeft > 0 ? weeksLeft : '0';
+
+  // Phase labelling
+  const phaseEl = document.getElementById('phase-label');
+  if (daysLeft > 42) {
+    phaseEl.textContent = 'Phase 1 — Foundations & topic-linked Qs';
+  } else if (daysLeft > 21) {
+    phaseEl.textContent = 'Phase 2 — Mixed mode MCQs, consolidate gaps';
+  } else if (daysLeft > 7) {
+    phaseEl.textContent = 'Phase 3 — Timed full mocks, weak topic blitz';
+  } else if (daysLeft > 0) {
+    phaseEl.textContent = 'Final week — Light review, rest, sleep';
+    phaseEl.style.color = 'var(--accent4)';
+    phaseEl.style.borderColor = 'rgba(201,126,154,0.35)';
+    phaseEl.style.background = 'rgba(201,126,154,0.07)';
+  } else {
+    phaseEl.textContent = "Exam day — you\u2019ve got this.";
+  }
+})();
+</script>
+</body>
+</html>
