@@ -258,6 +258,7 @@
   .tag-hobby { background: rgba(196,122,90,0.1); color: #9a4a28; }
   .tag-life { background: rgba(160,128,144,0.1); color: #7a5868; }
   .tag-work { background: rgba(180,140,100,0.12); color: #7a5828; }
+  .tag-self { background: rgba(212,112,138,0.1); color: #c45070; }
 
   .block-note {
     font-size: 0.75rem;
@@ -403,7 +404,7 @@
     font-weight: 500;
   }
 
-  .todo-section-title.mrcp { color: #b8425e; }
+  .todo-section-title.work { color: #b8425e; }
   .todo-section-title.research { color: #8a4a7a; }
   .todo-section-title.life { color: #4a6e99; }
 
@@ -557,6 +558,191 @@
   }
 
   .todo-clear-btn:hover { color: #b8425e; }
+
+  /* ── Alarm modal ── */
+  .alarm-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 0.6rem 1.1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 3px 14px rgba(212,112,138,0.35);
+    transition: all 0.2s;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .alarm-fab:hover { transform: translateY(-2px); box-shadow: 0 5px 18px rgba(212,112,138,0.4); }
+
+  .alarm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(45,31,38,0.45);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .alarm-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .alarm-sheet {
+    background: #fff;
+    width: 100%;
+    max-width: 860px;
+    max-height: 88vh;
+    border-radius: 12px 12px 0 0;
+    overflow-y: auto;
+    transform: translateY(30px);
+    transition: transform 0.28s cubic-bezier(0.34,1.2,0.64,1);
+    padding: 0 0 2rem;
+  }
+  .alarm-overlay.open .alarm-sheet { transform: translateY(0); }
+
+  .alarm-sheet-header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.2rem 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+  }
+
+  .alarm-sheet-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+  }
+  .alarm-sheet-title em { font-style: italic; color: var(--accent); }
+
+  .alarm-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .alarm-close:hover { background: var(--border); }
+
+  .alarm-sheet-body { padding: 1.2rem; }
+
+  .alarm-tip {
+    background: rgba(212,112,138,0.06);
+    border: 1px solid rgba(212,112,138,0.18);
+    border-radius: 3px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.73rem;
+    color: var(--dim);
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+  }
+  .alarm-tip strong { color: var(--accent); }
+
+  .alarm-shifts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+
+  .acard {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+    font-size: 0.78rem;
+  }
+
+  .acard-header {
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .acard-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
+
+  .acard-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.45rem;
+    border-radius: 2px;
+    color: #fff;
+  }
+
+  .acard-day .acard-header { background: rgba(212,112,138,0.07); }
+  .acard-day .acard-pill { background: var(--accent); }
+  .acard-longday .acard-header { background: rgba(160,126,201,0.07); }
+  .acard-longday .acard-pill { background: #a07ec9; }
+  .acard-night .acard-header { background: rgba(176,122,158,0.07); }
+  .acard-night .acard-pill { background: var(--accent2); }
+  .acard-off .acard-header { background: rgba(143,170,204,0.09); }
+  .acard-off .acard-pill { background: var(--accent3); }
+
+  .acard-section {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 0.28rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .arow {
+    display: grid;
+    grid-template-columns: 52px 20px 1fr;
+    align-items: center;
+    gap: 0.4rem 0.5rem;
+    padding: 0.48rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .arow:last-child { border-bottom: none; }
+
+  .arow-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .arow-emoji { font-size: 0.82rem; text-align: center; }
+  .arow-label { color: var(--text); line-height: 1.3; font-size: 0.76rem; }
+  .arow-label small { display: block; font-size: 0.65rem; color: var(--muted); margin-top: 0.08rem; }
+
+  @media print {
+    .alarm-fab, .alarm-overlay { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -612,21 +798,35 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">06:20–06:35</div>
+      <div class="block-time">06:20–06:30</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — morning routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">Cleanse, SPF, serums — whatever your routine is. 10 min protected, every day.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:30–06:32</div>
+      <div class="block-content">
+        <div class="block-label">Supplements <span class="tag tag-self">self</span></div>
+        <div class="block-note">Take them with breakfast while it's still in front of you. Leave them next to your cup so you can't forget.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:32–06:47</div>
       <div class="block-content">
         <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
         <div class="block-note">Morning movement before screens. Grounds you before a long shift. Even 10 min of slow form counts.</div>
       </div>
     </div>
     <div class="block">
-      <div class="block-time">06:35–07:05</div>
+      <div class="block-time">06:47–07:17</div>
       <div class="block-content">
         <div class="block-label">Japanese — 30 mins <span class="tag tag-japanese">日本語</span></div>
         <div class="block-note">Anki deck review first (10 min), then Duolingo / grammar / listening. Morning is best for language retention.</div>
       </div>
     </div>
     <div class="block">
-      <div class="block-time">07:05–07:30</div>
+      <div class="block-time">07:17–07:45</div>
       <div class="block-content">
         <div class="block-label">Commute / prep <span class="tag tag-life">life</span></div>
         <div class="block-note">Passive review: podcast or Anki on the train. No email until evening — protect the morning.</div>
@@ -668,7 +868,14 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">21:30–22:00</div>
+      <div class="block-time">21:30–21:40</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — evening routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">Cleanse, moisturise, treatments. 10 min. A small act of care before sleep.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">21:40–22:00</div>
       <div class="block-content">
         <div class="block-label">Wind-down + sleep prep <span class="tag tag-life">life</span></div>
         <div class="block-note">No screens ideally. Lights out by 22:00–22:30 to get 7–8 hrs before next day.</div>
@@ -687,14 +894,28 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">06:20–06:35</div>
+      <div class="block-time">06:20–06:30</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — morning routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">Quick 10 min routine. SPF is non-negotiable even if nothing else gets done.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:30–06:32</div>
+      <div class="block-content">
+        <div class="block-label">Supplements <span class="tag tag-self">self</span></div>
+        <div class="block-note">With breakfast, before you move. Same spot every day.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">06:32–06:47</div>
       <div class="block-content">
         <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
         <div class="block-note">Non-negotiable even on a long day. 15 minutes of slow movement before a 13-hr shift is protective, not indulgent.</div>
       </div>
     </div>
     <div class="block">
-      <div class="block-time">06:35–07:00</div>
+      <div class="block-time">06:47–07:07</div>
       <div class="block-content">
         <div class="block-label">Japanese — Anki only <span class="tag tag-japanese">日本語</span></div>
         <div class="block-note">Cards only, 20 min. Just maintenance before a long shift.</div>
@@ -729,7 +950,14 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">22:00–22:30</div>
+      <div class="block-time">22:00–22:10</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — evening routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">Even after a long day. 10 minutes. You will thank yourself in the morning.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">22:10–22:30</div>
       <div class="block-content">
         <div class="block-label">Wind-down — hobby or reading <span class="tag tag-hobby">hobby</span></div>
         <div class="block-note">A chapter of your book, a short FFXIV session, something light. Then sleep.</div>
@@ -755,14 +983,28 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">10:30–10:45</div>
+      <div class="block-time">10:30–10:40</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — morning routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">10 min. On a pre-night day you have the luxury of time — don't skip it.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">10:40–10:42</div>
+      <div class="block-content">
+        <div class="block-label">Supplements <span class="tag tag-self">self</span></div>
+        <div class="block-note">With food, same time, same place.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">10:42–10:57</div>
       <div class="block-content">
         <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
         <div class="block-note">Morning movement even on a pre-night day. Keeps the habit consistent regardless of shift type.</div>
       </div>
     </div>
     <div class="block">
-      <div class="block-time">10:45–11:30</div>
+      <div class="block-time">10:57–11:42</div>
       <div class="block-content">
         <div class="block-label">Light study — 45 mins <span class="tag tag-study">study</span></div>
         <div class="block-note">Passmedicine Qs only — low cognitive load. No new heavy topics before a night.</div>
@@ -823,14 +1065,28 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">08:00–08:15</div>
+      <div class="block-time">08:00–08:10</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — morning routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">No rush this morning. Do the full routine properly.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">08:10–08:12</div>
+      <div class="block-content">
+        <div class="block-label">Supplements <span class="tag tag-self">self</span></div>
+        <div class="block-note">Right after skincare, while you're still in the bathroom. Stack the habits.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">08:12–08:27</div>
       <div class="block-content">
         <div class="block-label">Tai chi — 15 mins <span class="tag tag-exercise">move</span></div>
         <div class="block-note">Every day, no exceptions. Brief morning form before cognitive work. Sets a calm, focused tone.</div>
       </div>
     </div>
     <div class="block">
-      <div class="block-time">08:15–09:45</div>
+      <div class="block-time">08:27–09:57</div>
       <div class="block-content">
         <div class="block-label">Research block — 1.5 hrs <span class="tag tag-study">research</span></div>
         <div class="block-note">Writing, data analysis, literature review, or abstract prep. Pick one task type per session — don't mix. Start with writing or analysis while your brain is freshest.</div>
@@ -879,7 +1135,14 @@
       </div>
     </div>
     <div class="block">
-      <div class="block-time">20:00–21:00</div>
+      <div class="block-time">20:00–20:10</div>
+      <div class="block-content">
+        <div class="block-label">Skincare — evening routine <span class="tag tag-self">self</span></div>
+        <div class="block-note">End of day care. 10 min. Consistent evening skincare is where the results actually come from.</div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-time">20:10–21:00</div>
       <div class="block-content">
         <div class="block-label">Optional: Japanese immersion <span class="tag tag-japanese">日本語</span></div>
         <div class="block-note">JP audio drama, anime without subs, or a JP FFXIV session. Passive but it counts.</div>
@@ -890,19 +1153,19 @@
   <!-- TO-DO LIST -->
   <div id="shift-todo" class="todo-view hidden">
 
-    <!-- MRCP -->
+    <!-- Work -->
     <div class="todo-section">
       <div class="todo-section-header">
-        <span class="todo-section-title mrcp">MRCP Study</span>
-        <span class="todo-count" id="count-mrcp"></span>
+        <span class="todo-section-title work">Work</span>
+        <span class="todo-count" id="count-work"></span>
       </div>
       <div class="todo-input-row">
-        <input class="todo-input" id="input-mrcp" placeholder="Add a study task…" onkeydown="if(event.key==='Enter') addTodo('mrcp')">
-        <button class="todo-add-btn" onclick="addTodo('mrcp')">Add</button>
+        <input class="todo-input" id="input-work" placeholder="Add a work task…" onkeydown="if(event.key==='Enter') addTodo('work')">
+        <button class="todo-add-btn" onclick="addTodo('work')">Add</button>
       </div>
-      <ul class="todo-list" id="list-mrcp"></ul>
+      <ul class="todo-list" id="list-work"></ul>
       <div class="todo-footer">
-        <button class="todo-clear-btn" onclick="clearDone('mrcp')">Clear completed</button>
+        <button class="todo-clear-btn" onclick="clearDone('work')">Clear completed</button>
       </div>
     </div>
 
@@ -922,14 +1185,14 @@
       </div>
     </div>
 
-    <!-- Life / Admin -->
+    <!-- Life & Admin -->
     <div class="todo-section">
       <div class="todo-section-header">
         <span class="todo-section-title life">Life &amp; Admin</span>
         <span class="todo-count" id="count-life"></span>
       </div>
       <div class="todo-input-row">
-        <input class="todo-input" id="input-life" placeholder="Add a life task…" onkeydown="if(event.key==='Enter') addTodo('life')">
+        <input class="todo-input" id="input-life" placeholder="Add a life or admin task…" onkeydown="if(event.key==='Enter') addTodo('life')">
         <button class="todo-add-btn" onclick="addTodo('life')">Add</button>
       </div>
       <ul class="todo-list" id="list-life"></ul>
@@ -1002,6 +1265,105 @@
 
 </div>
 
+<!-- Floating alarm button -->
+<button class="alarm-fab" onclick="document.getElementById('alarmOverlay').classList.add('open')">
+  ⏰ Alarms
+</button>
+
+<!-- Alarm modal overlay -->
+<div class="alarm-overlay" id="alarmOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="alarm-sheet">
+    <div class="alarm-sheet-header">
+      <span class="alarm-sheet-title">Alarm <em>Reference</em></span>
+      <button class="alarm-close" onclick="document.getElementById('alarmOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="alarm-sheet-body">
+
+      <div class="alarm-tip">
+        <strong>How to use:</strong> Set each alarm as recurring in your Clock app and label them as shown. Turn on/off the relevant shift group each evening. On iPhone, use the same prefix (e.g. "DAY —") so alarms group together.
+      </div>
+
+      <div class="alarm-shifts-grid">
+
+        <!-- DAY SHIFT -->
+        <div class="acard acard-day">
+          <div class="acard-header"><span class="acard-title">Day Shift</span><span class="acard-pill">08:00–18:00</span></div>
+          <div class="acard-section">Morning</div>
+          <div class="arow"><span class="arow-time">06:00</span><span class="arow-emoji">⏰</span><span class="arow-label">Wake up + breakfast</span></div>
+          <div class="arow"><span class="arow-time">06:20</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — morning<small>10 min · cleanse, SPF, serums</small></span></div>
+          <div class="arow"><span class="arow-time">06:30</span><span class="arow-emoji">💊</span><span class="arow-label">Supplements<small>with breakfast</small></span></div>
+          <div class="arow"><span class="arow-time">06:32</span><span class="arow-emoji">🥋</span><span class="arow-label">Tai chi — 15 mins</span></div>
+          <div class="arow"><span class="arow-time">06:47</span><span class="arow-emoji">🇯🇵</span><span class="arow-label">Japanese — 30 mins<small>Anki first, then grammar/listening</small></span></div>
+          <div class="arow"><span class="arow-time">07:17</span><span class="arow-emoji">🚶</span><span class="arow-label">Commute / leave for work</span></div>
+          <div class="acard-section">Evening</div>
+          <div class="arow"><span class="arow-time">18:30</span><span class="arow-emoji">🍽️</span><span class="arow-label">Food + decompress</span></div>
+          <div class="arow"><span class="arow-time">19:00</span><span class="arow-emoji">📧</span><span class="arow-label">Email — 15 mins only</span></div>
+          <div class="arow"><span class="arow-time">19:15</span><span class="arow-emoji">📖</span><span class="arow-label">Study block — 1 hr<small>20–25 Qs + Anki review</small></span></div>
+          <div class="arow"><span class="arow-time">20:15</span><span class="arow-emoji">🎮</span><span class="arow-label">Hobby / leisure</span></div>
+          <div class="arow"><span class="arow-time">21:30</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — evening<small>10 min · cleanse, moisturise</small></span></div>
+          <div class="arow"><span class="arow-time">21:40</span><span class="arow-emoji">🌙</span><span class="arow-label">Wind-down · screens off</span></div>
+        </div>
+
+        <!-- LONG DAY -->
+        <div class="acard acard-longday">
+          <div class="acard-header"><span class="acard-title">Long Day</span><span class="acard-pill">08:00–21:00</span></div>
+          <div class="acard-section">Morning</div>
+          <div class="arow"><span class="arow-time">06:00</span><span class="arow-emoji">⏰</span><span class="arow-label">Wake up + breakfast</span></div>
+          <div class="arow"><span class="arow-time">06:20</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — morning<small>10 min · SPF essential</small></span></div>
+          <div class="arow"><span class="arow-time">06:30</span><span class="arow-emoji">💊</span><span class="arow-label">Supplements</span></div>
+          <div class="arow"><span class="arow-time">06:32</span><span class="arow-emoji">🥋</span><span class="arow-label">Tai chi — 15 mins</span></div>
+          <div class="arow"><span class="arow-time">06:47</span><span class="arow-emoji">🇯🇵</span><span class="arow-label">Japanese — Anki only<small>20 min</small></span></div>
+          <div class="arow"><span class="arow-time">07:07</span><span class="arow-emoji">📖</span><span class="arow-label">Study — 40 mins<small>MCQs or quick review</small></span></div>
+          <div class="arow"><span class="arow-time">07:47</span><span class="arow-emoji">🚶</span><span class="arow-label">Commute / leave for work</span></div>
+          <div class="acard-section">Evening (post-shift)</div>
+          <div class="arow"><span class="arow-time">21:30</span><span class="arow-emoji">🍽️</span><span class="arow-label">Food + decompress<small>No study, no email tonight</small></span></div>
+          <div class="arow"><span class="arow-time">22:00</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — evening<small>10 min · even after a long day</small></span></div>
+          <div class="arow"><span class="arow-time">22:10</span><span class="arow-emoji">🎮</span><span class="arow-label">Wind-down · short hobby</span></div>
+          <div class="arow"><span class="arow-time">22:30</span><span class="arow-emoji">🌙</span><span class="arow-label">Sleep — 7 hrs minimum</span></div>
+        </div>
+
+        <!-- NIGHT SHIFT -->
+        <div class="acard acard-night">
+          <div class="acard-header"><span class="acard-title">Night Shift</span><span class="acard-pill">Pre-night day</span></div>
+          <div class="acard-section">Pre-night morning</div>
+          <div class="arow"><span class="arow-time">10:00</span><span class="arow-emoji">⏰</span><span class="arow-label">Wake up + breakfast</span></div>
+          <div class="arow"><span class="arow-time">10:30</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — morning<small>10 min · take your time</small></span></div>
+          <div class="arow"><span class="arow-time">10:40</span><span class="arow-emoji">💊</span><span class="arow-label">Supplements</span></div>
+          <div class="arow"><span class="arow-time">10:42</span><span class="arow-emoji">🥋</span><span class="arow-label">Tai chi — 15 mins</span></div>
+          <div class="arow"><span class="arow-time">10:57</span><span class="arow-emoji">📖</span><span class="arow-label">Light study — 45 mins<small>MCQs only</small></span></div>
+          <div class="arow"><span class="arow-time">11:42</span><span class="arow-emoji">🇯🇵</span><span class="arow-label">Japanese — Anki only<small>15–20 min max</small></span></div>
+          <div class="arow"><span class="arow-time">12:00</span><span class="arow-emoji">📧</span><span class="arow-label">Email — 15 mins<small>Last thing before nap</small></span></div>
+          <div class="arow"><span class="arow-time">12:15</span><span class="arow-emoji">😴</span><span class="arow-label">Pre-night nap<small>2–3 hrs · wake alarm ~15:30</small></span></div>
+          <div class="arow"><span class="arow-time">19:30</span><span class="arow-emoji">🏥</span><span class="arow-label">Leave for night shift</span></div>
+          <div class="acard-section">Post-night</div>
+          <div class="arow"><span class="arow-time">—</span><span class="arow-emoji">🚫</span><span class="arow-label">No alarms post-night<small>Sleep until natural wake. No study, no email.</small></span></div>
+        </div>
+
+        <!-- DAY OFF -->
+        <div class="acard acard-off">
+          <div class="acard-header"><span class="acard-title">Day Off</span><span class="acard-pill">Rest &amp; study</span></div>
+          <div class="acard-section">Morning</div>
+          <div class="arow"><span class="arow-time">07:30</span><span class="arow-emoji">☕</span><span class="arow-label">Wake up · gentle start</span></div>
+          <div class="arow"><span class="arow-time">08:00</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — morning<small>10 min · full routine</small></span></div>
+          <div class="arow"><span class="arow-time">08:10</span><span class="arow-emoji">💊</span><span class="arow-label">Supplements</span></div>
+          <div class="arow"><span class="arow-time">08:12</span><span class="arow-emoji">🥋</span><span class="arow-label">Tai chi — 15 mins</span></div>
+          <div class="arow"><span class="arow-time">08:27</span><span class="arow-emoji">🔬</span><span class="arow-label">Research block — 1.5 hrs<small>Writing / data / lit review</small></span></div>
+          <div class="arow"><span class="arow-time">09:57</span><span class="arow-emoji">🇯🇵</span><span class="arow-label">Japanese — 30 mins<small>Grammar, speaking, video</small></span></div>
+          <div class="arow"><span class="arow-time">10:27</span><span class="arow-emoji">🏃</span><span class="arow-label">Exercise — 45–60 mins</span></div>
+          <div class="acard-section">Afternoon</div>
+          <div class="arow"><span class="arow-time">13:00</span><span class="arow-emoji">📧</span><span class="arow-label">Email — 15 mins</span></div>
+          <div class="arow"><span class="arow-time">14:00</span><span class="arow-emoji">📖</span><span class="arow-label">MRCP study — 1 hr<small>40–50 Qs timed + full review</small></span></div>
+          <div class="arow"><span class="arow-time">15:00</span><span class="arow-emoji">🎮</span><span class="arow-label">Leisure — extended hobby time</span></div>
+          <div class="acard-section">Evening</div>
+          <div class="arow"><span class="arow-time">20:00</span><span class="arow-emoji">🌸</span><span class="arow-label">Skincare — evening<small>10 min</small></span></div>
+          <div class="arow"><span class="arow-time">20:10</span><span class="arow-emoji">🇯🇵</span><span class="arow-label">Optional: Japanese immersion</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 function showShift(shift) {
   ['day','longday','night','off','todo'].forEach(s => {
@@ -1032,7 +1394,7 @@ function showShift(shift) {
 }
 
 // ── To-do logic with localStorage ──
-const CATEGORIES = ['mrcp', 'research', 'life'];
+const CATEGORIES = ['work', 'research', 'life'];
 
 function loadTodos() {
   const data = {};
