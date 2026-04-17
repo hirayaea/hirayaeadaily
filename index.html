@@ -1670,11 +1670,8 @@ async function pushToCloud() {
   if (!url) return;
   const data = loadTodos();
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(data)
-    });
+    const encoded = encodeURIComponent(JSON.stringify(data));
+    const res = await fetch(url + '?action=save&data=' + encoded);
     const note = document.getElementById('syncNote');
     if (note) {
       if (res.ok) {
@@ -1695,7 +1692,7 @@ async function pullFromCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
   try {
-    const res = await fetch(url + '?t=' + Date.now());
+    const res = await fetch(url + '?action=load&t=' + Date.now());
     if (res.ok) {
       const text = await res.text();
       const data = JSON.parse(text);
