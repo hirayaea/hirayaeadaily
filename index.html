@@ -1427,13 +1427,12 @@
       <div class="sync-box" id="syncBox" style="border:none;border-radius:0;">
         <div class="sync-body hidden" id="syncBody"></div>
         <div class="sync-connected" id="syncConnected">
-          <span class="sync-ok">✓ Connected to Google Sheets</span>
-          <p class="sync-instructions" style="margin-top:0.5rem;">Your to-do list is backed by your Google Sheet. Push after making changes, pull to load the latest on a new device.</p>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.8rem;">
-            <button class="sync-btn" onclick="pushToCloud()">Push to Sheets</button>
-            <button class="sync-btn" onclick="pullFromCloud()">Pull from Sheets</button>
-          </div>
+          <span class="sync-ok">✓ Auto-syncing with Google Sheets</span>
+          <p class="sync-instructions" style="margin-top:0.5rem;">Your to-do list syncs automatically — it loads the latest from Sheets when you open the app, and saves every change instantly.</p>
           <p class="sync-note" id="syncNote"></p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem;">
+            <button class="sync-btn sync-btn-outline" onclick="pullFromCloud()">Force refresh</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1623,6 +1622,7 @@ function addTodo(cat) {
   saveTodos(cat, data[cat]);
   input.value = '';
   render(cat, data[cat]);
+  pushToCloud();
 }
 
 function toggleTodo(cat, id) {
@@ -1631,6 +1631,7 @@ function toggleTodo(cat, id) {
   if (item) item.done = !item.done;
   saveTodos(cat, data[cat]);
   render(cat, data[cat]);
+  pushToCloud();
 }
 
 function deleteTodo(cat, id) {
@@ -1638,6 +1639,7 @@ function deleteTodo(cat, id) {
   data[cat] = data[cat].filter(i => i.id !== id);
   saveTodos(cat, data[cat]);
   render(cat, data[cat]);
+  pushToCloud();
 }
 
 function clearDone(cat) {
@@ -1645,6 +1647,7 @@ function clearDone(cat) {
   data[cat] = data[cat].filter(i => !i.done);
   saveTodos(cat, data[cat]);
   render(cat, data[cat]);
+  pushToCloud();
 }
 
 // ── Google Sheets sync ──
@@ -1666,49 +1669,52 @@ async function pushToCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
   const data = loadTodos();
-  const note = document.getElementById('syncNote');
-  if (note) note.textContent = 'Pushing…';
   try {
-    await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(data)
     });
-    if (note) note.textContent = 'Pushed ✓ ' + new Date().toLocaleTimeString();
+    const note = document.getElementById('syncNote');
+    if (note) {
+      if (res.ok) {
+        note.textContent = 'Saved ' + new Date().toLocaleTimeString();
+        note.style.color = '';
+      } else {
+        note.textContent = 'Save failed — try redeploying your script.';
+        note.style.color = '#c44';
+      }
+    }
   } catch(e) {
-    if (note) note.textContent = 'Push failed — check your connection.';
+    const note = document.getElementById('syncNote');
+    if (note) { note.textContent = 'Offline — saved locally.'; note.style.color = 'var(--muted)'; }
   }
 }
 
 async function pullFromCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
-  const note = document.getElementById('syncNote');
-  if (note) note.textContent = 'Pulling…';
   try {
     const res = await fetch(url + '?t=' + Date.now());
     if (res.ok) {
       const text = await res.text();
       const data = JSON.parse(text);
-      if (data && typeof data === 'object') {
+      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
         saveAllTodos(data);
         renderAll();
-        if (note) note.textContent = 'Pulled ✓ ' + new Date().toLocaleTimeString();
-      } else {
-        if (note) note.textContent = 'No data yet — push first from another device.';
+        const note = document.getElementById('syncNote');
+        if (note) { note.textContent = 'Loaded ' + new Date().toLocaleTimeString(); note.style.color = ''; }
       }
-    } else {
-      if (note) note.textContent = 'Pull failed — check your script URL.';
     }
   } catch(e) {
-    if (note) note.textContent = 'Could not reach Google Sheets. Check your URL.';
+    // Silently fall back to localStorage on network error
   }
 }
 
-// Init
+// Init — render from localStorage immediately, then pull latest from Sheets in background
 renderAll();
 initSyncUI();
+pullFromCloud();
 
 // Countdown to MRCP Part 1 — May 21
 (function() {
