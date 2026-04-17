@@ -1651,7 +1651,7 @@ function clearDone(cat) {
 }
 
 // ── Google Sheets sync ──
-const SYNC_URL = 'https://script.google.com/macros/s/AKfycbwLf1swh4MBQCdEav2OdAmKxJ93ENdPHOZMvzb4XGMrdBTc8ClGHQz0JaHOxdQr2vNf3w/exec';
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbwhfNF7UGP_3lDHCFPu00r5vcPLs6VMcE3y5Zen5DUUThMc_bj0Kxsc1fbqgOWxy0fIyw/exec';
 
 function getSyncConfig() {
   return { url: SYNC_URL };
@@ -1669,21 +1669,12 @@ async function pushToCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
   const data = loadTodos();
+  const note = document.getElementById('syncNote');
   try {
     const encoded = encodeURIComponent(JSON.stringify(data));
-    const res = await fetch(url + '?action=save&data=' + encoded);
-    const note = document.getElementById('syncNote');
-    if (note) {
-      if (res.ok) {
-        note.textContent = 'Saved ' + new Date().toLocaleTimeString();
-        note.style.color = '';
-      } else {
-        note.textContent = 'Save failed — try redeploying your script.';
-        note.style.color = '#c44';
-      }
-    }
+    await jsonp(url + '?action=save&data=' + encoded);
+    if (note) { note.textContent = 'Saved ' + new Date().toLocaleTimeString(); note.style.color = ''; }
   } catch(e) {
-    const note = document.getElementById('syncNote');
     if (note) { note.textContent = 'Offline — saved locally.'; note.style.color = 'var(--muted)'; }
   }
 }
@@ -1692,20 +1683,39 @@ async function pullFromCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
   try {
-    const res = await fetch(url + '?action=load&t=' + Date.now());
-    if (res.ok) {
-      const text = await res.text();
-      const data = JSON.parse(text);
-      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-        saveAllTodos(data);
-        renderAll();
-        const note = document.getElementById('syncNote');
-        if (note) { note.textContent = 'Loaded ' + new Date().toLocaleTimeString(); note.style.color = ''; }
-      }
+    const data = await jsonp(url + '?action=load');
+    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+      saveAllTodos(data);
+      renderAll();
+      const note = document.getElementById('syncNote');
+      if (note) { note.textContent = 'Loaded ' + new Date().toLocaleTimeString(); note.style.color = ''; }
     }
   } catch(e) {
-    // Silently fall back to localStorage on network error
+    // Silently fall back to localStorage
   }
+}
+
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_cb' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timeout'));
+    }, 8000);
+    function cleanup() {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timeout);
+    }
+    window[cbName] = function(data) {
+      cleanup();
+      resolve(data);
+    };
+    script.src = url + '&callback=' + cbName + '&t=' + Date.now();
+    script.onerror = () => { cleanup(); reject(new Error('Script error')); };
+    document.head.appendChild(script);
+  });
 }
 
 // Init — render from localStorage immediately, then pull latest from Sheets in background
