@@ -1425,51 +1425,13 @@
     </div>
     <div class="alarm-sheet-body">
       <div class="sync-box" id="syncBox" style="border:none;border-radius:0;">
-        <div class="sync-body" id="syncBody">
-          <p class="sync-instructions">Paste your <strong>Google Apps Script URL</strong> below to sync todos across all your devices via Google Sheets.</p>
-          <div class="sync-inputs">
-            <input class="sync-input" id="syncScriptUrl" placeholder="https://script.google.com/macros/s/…/exec" />
-          </div>
-          <div class="sync-actions">
-            <button class="sync-btn" onclick="saveSync()">Save &amp; connect</button>
-          </div>
-          <details style="margin-top:0.8rem;">
-            <summary style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;">Setup instructions ▾</summary>
-            <ol class="sync-steps">
-              <li>Go to <strong>sheets.google.com</strong> → create a new sheet called <strong>Aya Todos</strong></li>
-              <li>Click <strong>Extensions → Apps Script</strong></li>
-              <li>Delete any existing code and paste in the script below</li>
-              <li>Click <strong>Deploy → New deployment → Web app</strong></li>
-              <li>Set <em>Execute as</em>: Me · <em>Who has access</em>: Anyone</li>
-              <li>Click Deploy → copy the URL and paste it above</li>
-            </ol>
-            <pre class="sync-code">function doGet(e) {
-  const sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getActiveSheet();
-  const data = sheet.getRange(1,1,1,1).getValue();
-  return ContentService
-    .createTextOutput(data || '{}')
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  const sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getActiveSheet();
-  sheet.getRange(1,1,1,1).setValue(e.postData.contents);
-  return ContentService
-    .createTextOutput('ok')
-    .setMimeType(ContentService.MimeType.TEXT);
-}</pre>
-          </details>
-        </div>
-        <div class="sync-connected hidden" id="syncConnected">
-          <span class="sync-ok">✓ Syncing to Google Sheets</span>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+        <div class="sync-body hidden" id="syncBody"></div>
+        <div class="sync-connected" id="syncConnected">
+          <span class="sync-ok">✓ Connected to Google Sheets</span>
+          <p class="sync-instructions" style="margin-top:0.5rem;">Your to-do list is backed by your Google Sheet. Push after making changes, pull to load the latest on a new device.</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.8rem;">
             <button class="sync-btn" onclick="pushToCloud()">Push to Sheets</button>
             <button class="sync-btn" onclick="pullFromCloud()">Pull from Sheets</button>
-            <button class="sync-btn sync-btn-outline" onclick="disconnectSync()">Disconnect</button>
           </div>
           <p class="sync-note" id="syncNote"></p>
         </div>
@@ -1686,41 +1648,18 @@ function clearDone(cat) {
 }
 
 // ── Google Sheets sync ──
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbwLf1swh4MBQCdEav2OdAmKxJ93ENdPHOZMvzb4XGMrdBTc8ClGHQz0JaHOxdQr2vNf3w/exec';
+
 function getSyncConfig() {
-  return { url: localStorage.getItem('sync-scriptUrl') || '' };
+  return { url: SYNC_URL };
 }
 
 function initSyncUI() {
-  const { url } = getSyncConfig();
   const connected = document.getElementById('syncConnected');
   const body = document.getElementById('syncBody');
-  const status = document.getElementById('syncStatus');
   if (!connected || !body) return;
-  if (url) {
-    connected.classList.remove('hidden');
-    body.classList.add('hidden');
-    if (status) { status.textContent = 'Connected'; status.style.color = '#4a9a6a'; }
-  } else {
-    connected.classList.add('hidden');
-    body.classList.remove('hidden');
-    if (status) { status.textContent = 'Not configured'; status.style.color = ''; }
-  }
-}
-
-function saveSync() {
-  const url = document.getElementById('syncScriptUrl').value.trim();
-  if (!url || !url.startsWith('https://script.google.com')) {
-    alert('Please paste a valid Google Apps Script URL.');
-    return;
-  }
-  localStorage.setItem('sync-scriptUrl', url);
-  initSyncUI();
-  pullFromCloud();
-}
-
-function disconnectSync() {
-  localStorage.removeItem('sync-scriptUrl');
-  initSyncUI();
+  connected.classList.remove('hidden');
+  body.classList.add('hidden');
 }
 
 async function pushToCloud() {
