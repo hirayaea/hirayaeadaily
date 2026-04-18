@@ -1671,54 +1671,29 @@ async function pushToCloud() {
   const data = loadTodos();
   const note = document.getElementById('syncNote');
   try {
-    // Use a hidden iframe + form POST — no CORS issues, no URL length limit
-    await formPost(url, JSON.stringify(data));
-    if (note) { note.textContent = 'Saved ' + new Date().toLocaleTimeString(); note.style.color = ''; }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=save&data=' + encodeURIComponent(JSON.stringify(data))
+    });
+    const json = await res.json();
+    if (note) {
+      note.textContent = json.ok ? 'Saved ' + new Date().toLocaleTimeString() : 'Save error: ' + json.error;
+      note.style.color = json.ok ? '' : '#c44';
+    }
   } catch(e) {
     if (note) { note.textContent = 'Offline — saved locally.'; note.style.color = 'var(--muted)'; }
   }
-}
-
-function formPost(url, payload) {
-  return new Promise((resolve) => {
-    // Create hidden iframe as target so page doesn't navigate
-    const iframeName = '_post_' + Date.now();
-    const iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = url;
-    form.target = iframeName;
-    form.style.display = 'none';
-
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'data';
-    input.value = payload;
-    form.appendChild(input);
-
-    document.body.appendChild(form);
-    form.submit();
-
-    // Clean up after short delay
-    setTimeout(() => {
-      document.body.removeChild(form);
-      document.body.removeChild(iframe);
-      resolve();
-    }, 2000);
-  });
 }
 
 async function pullFromCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
   try {
-    const data = await jsonp(url + '?action=load');
-    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-      saveAllTodos(data);
+    const res = await fetch(url + '?action=load&t=' + Date.now());
+    const json = await res.json();
+    if (json.ok && json.data && typeof json.data === 'object' && Object.keys(json.data).length > 0) {
+      saveAllTodos(json.data);
       renderAll();
       const note = document.getElementById('syncNote');
       if (note) { note.textContent = 'Loaded ' + new Date().toLocaleTimeString(); note.style.color = ''; }
@@ -1748,6 +1723,33 @@ function jsonp(url) {
     script.src = url + '&callback=' + cbName + '&t=' + Date.now();
     script.onerror = () => { cleanup(); reject(new Error('Script error')); };
     document.head.appendChild(script);
+  });
+}
+
+function formPost(url, payload) {
+  return new Promise((resolve) => {
+    const iframeName = '_post_' + Date.now();
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = iframeName;
+    form.style.display = 'none';
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = payload;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => {
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+      resolve();
+    }, 2000);
   });
 }
 
