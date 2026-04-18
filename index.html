@@ -863,9 +863,28 @@
   @media print {
     .alarm-fab, .alarm-overlay { display: none !important; }
   }
+
+  /* ── Sync bar ── */
+  .sync-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    padding: 0.35rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-align: center;
+    transition: background 0.3s, opacity 0.3s;
+    pointer-events: none;
+  }
+  .sync-bar.idle    { background: transparent; opacity: 0; }
+  .sync-bar.syncing { background: rgba(143,170,204,0.15); color: #4a6e99; opacity: 1; }
+  .sync-bar.ok      { background: rgba(74,154,106,0.12); color: #4a9a6a; opacity: 1; }
+  .sync-bar.err     { background: rgba(196,68,68,0.1); color: #c44444; opacity: 1; }
 </style>
 </head>
 <body>
+<div class="sync-bar idle" id="sync-bar"><span id="sync-msg"></span></div>
 <div class="container">
 
   <header>
@@ -1667,7 +1686,17 @@ function initSyncUI() {
 
 let saveTimer = null;
 
+function syncStatus(status, msg) {
+  const bar = document.getElementById('sync-bar');
+  const txt = document.getElementById('sync-msg');
+  if (!bar || !txt) return;
+  bar.className = 'sync-bar ' + status;
+  txt.textContent = msg;
+}
+
 function scheduleSave() {
+  saveLocal();
+  syncStatus('syncing', 'Saving…');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(pushToCloud, 1200);
 }
@@ -1675,36 +1704,45 @@ function scheduleSave() {
 async function pushToCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
-  const data = loadTodos();
-  const note = document.getElementById('syncNote');
   try {
-    const payload = encodeURIComponent(JSON.stringify(data));
+    const payload = encodeURIComponent(JSON.stringify(loadTodos()));
     const res = await fetch(url + '?action=save&data=' + payload);
     const json = await res.json();
-    if (note) {
-      note.textContent = json.ok ? 'Saved ✦ ' + new Date().toLocaleTimeString() : 'Save error: ' + json.error;
-      note.style.color = json.ok ? '' : '#c44';
+    if (json.ok) {
+      syncStatus('ok', 'Saved ✦');
+      setTimeout(() => syncStatus('idle', ''), 2500);
+    } else {
+      syncStatus('err', 'Save failed — kept locally');
     }
   } catch(e) {
-    if (note) { note.textContent = 'Offline — saved locally.'; note.style.color = 'var(--muted)'; }
+    syncStatus('err', 'Offline — saved locally');
+    setTimeout(() => syncStatus('idle', ''), 3000);
   }
 }
 
 async function pullFromCloud() {
   const { url } = getSyncConfig();
   if (!url) return;
-  const note = document.getElementById('syncNote');
+  syncStatus('syncing', 'Loading your data…');
   try {
     const res = await fetch(url + '?action=load');
     const json = await res.json();
     if (json.ok && json.data && typeof json.data === 'object' && Object.keys(json.data).length > 0) {
       saveAllTodos(json.data);
       renderAll();
-      if (note) { note.textContent = 'Synced ✦'; note.style.color = ''; }
+      syncStatus('ok', 'Synced ✦');
+      setTimeout(() => syncStatus('idle', ''), 2500);
+    } else {
+      syncStatus('idle', '');
     }
   } catch(e) {
-    if (note) { note.textContent = 'Offline — showing local data.'; note.style.color = 'var(--muted)'; }
+    syncStatus('err', 'Could not load — showing local data');
+    setTimeout(() => syncStatus('idle', ''), 3000);
   }
+}
+
+function saveLocal() {
+  try { localStorage.setItem('aya_todos_local', JSON.stringify(loadTodos())); } catch(e) {}
 }
 
 // Init — render from localStorage immediately, then pull latest from Sheets in background
