@@ -1670,7 +1670,7 @@ function clearDone(cat) {
 }
 
 // ── Google Sheets sync ──
-const SYNC_URL = 'https://script.google.com/macros/s/AKfycbwhfNF7UGP_3lDHCFPu00r5vcPLs6VMcE3y5Zen5DUUThMc_bj0Kxsc1fbqgOWxy0fIyw/exec';
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbyCEokO8EUfBIeN6bAghjSjLvbYnOeQd1_0mKujzs0tyABDAh212r1ORicSDFCn2IO-IA/exec';
 
 function getSyncConfig() {
   return { url: SYNC_URL };
@@ -1726,17 +1726,30 @@ async function pullFromCloud() {
   syncStatus('syncing', 'Loading your data…');
   try {
     const res = await fetch(url + '?action=load');
-    const json = await res.json();
+    const text = await res.text();
+    console.log('Sheets raw response:', text);
+    let json;
+    try { json = JSON.parse(text); } catch(e) {
+      syncStatus('err', 'Bad response: ' + text.slice(0, 80));
+      setTimeout(() => syncStatus('idle', ''), 5000);
+      return;
+    }
+    console.log('Sheets parsed:', json);
     if (json.ok && json.data && typeof json.data === 'object' && Object.keys(json.data).length > 0) {
       saveAllTodos(json.data);
       renderAll();
       syncStatus('ok', 'Synced ✦');
       setTimeout(() => syncStatus('idle', ''), 2500);
+    } else if (json.ok) {
+      syncStatus('ok', 'Connected — no data yet');
+      setTimeout(() => syncStatus('idle', ''), 2500);
     } else {
-      syncStatus('idle', '');
+      syncStatus('err', 'Error: ' + (json.error || 'unknown'));
+      setTimeout(() => syncStatus('idle', ''), 5000);
     }
   } catch(e) {
-    syncStatus('err', 'Could not load — showing local data');
+    console.error('pullFromCloud error:', e);
+    syncStatus('err', 'Could not reach Sheets: ' + e.message);
     setTimeout(() => syncStatus('idle', ''), 3000);
   }
 }
