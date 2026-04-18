@@ -1671,12 +1671,45 @@ async function pushToCloud() {
   const data = loadTodos();
   const note = document.getElementById('syncNote');
   try {
-    const encoded = encodeURIComponent(JSON.stringify(data));
-    await jsonp(url + '?action=save&data=' + encoded);
+    // Use a hidden iframe + form POST — no CORS issues, no URL length limit
+    await formPost(url, JSON.stringify(data));
     if (note) { note.textContent = 'Saved ' + new Date().toLocaleTimeString(); note.style.color = ''; }
   } catch(e) {
     if (note) { note.textContent = 'Offline — saved locally.'; note.style.color = 'var(--muted)'; }
   }
+}
+
+function formPost(url, payload) {
+  return new Promise((resolve) => {
+    // Create hidden iframe as target so page doesn't navigate
+    const iframeName = '_post_' + Date.now();
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = iframeName;
+    form.style.display = 'none';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = payload;
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+    form.submit();
+
+    // Clean up after short delay
+    setTimeout(() => {
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+      resolve();
+    }, 2000);
+  });
 }
 
 async function pullFromCloud() {
